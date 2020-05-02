@@ -1,8 +1,10 @@
+const fs = require('fs').promises;
 const _functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const fns = _functions.region('europe-west3')
 const { saveStatus } = require('./saveStatus')
 const { maybeAddNewEntities } = require('./maybeAddNewEntities')
+const LacertaAPI = require('./LacertaAPI')
 
 admin.initializeApp();
 
@@ -18,7 +20,21 @@ exports.addEntitiesOnNewStatus = fns.firestore
     return maybeAddNewEntities(status);
   });
 
-// exports.saveStatus = functions.pubsub
-//   .schedule('every day 23:00')
-//   .timeZone('Europe/Minsk')
-//   .onRun(saveStatus)
+exports.importData = fns.https.onRequest((req, resp) => {
+  console.log(process.cwd());
+
+  return Promise.all([1].map((date) => {
+    fs
+      .readFile(`../public/${date}.json`, 'utf-8')
+      .then((file) => {
+        const data = JSON.parse(file)
+        return saveStatus(
+          LacertaAPI.processStatuses(data.data),
+          String(new Date(data.time).getTime())
+        )
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+  }))
+})

@@ -2,7 +2,6 @@ const fs = require('fs').promises;
 const path = require('path')
 const axios = require('axios')
 const cheerio = require('cheerio')
-// const crypto = require('crypto')
 
 const API_URL = "https://prod.lacerta.by/api/"
 
@@ -16,14 +15,19 @@ exports.getEmissionsStatus = async () => {
       .fill(true)
       .map((_, i) => exports.getPage(i + 1))
   )
-  return [page0, ...restPages]
-    .reduce((acc, page) => [...acc, ...page.content], [])
-    .map(em => ({
-      id: em.emission_id,
-      rest: em.rest_count,
-      type: em.emission_type,
-    }))
+  return exports.processStatuses([
+    ...page0.content,
+    ...restPages.reduce((acc, page) => ([...acc, ...page.content]), [])
+  ])
 }
+
+exports.processStatuses = status => status.map(exports.processEmissionStatus)
+
+exports.processEmissionStatus = em => ({
+  id: em.emission_id,
+  rest: em.rest_count,
+  type: em.emission_type,
+})
 
 exports.getPage = async (page = 0) => {
   let fromFiles = process.env.READ_LOCAL_DATA === '1'
