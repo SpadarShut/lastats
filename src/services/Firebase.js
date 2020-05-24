@@ -1,7 +1,7 @@
 import * as firebase from "firebase/app";
 import "firebase/firestore";
 import React from "react"
-import { useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 var firebaseConfig = {
   apiKey: "AIzaSyAuJpDa2F6jUWFs7lVQBakFEcydtyddYQM",
@@ -18,7 +18,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const RATE = 2.5;
-export const useEmissions = () => {
+
+function useEmissions() {
   const [emissions, loading, err] = useCollectionData(db.collection('emissions'))
   if ((emissions && !emissions.length)) {
     debugger;
@@ -34,7 +35,15 @@ export const useEmissions = () => {
   return [emissionsObj, loading, err]
 }
 
-export const useData = () => {
+function useEmission(id) {
+  const [e] = useEmissions()
+  if (!e) {
+    return null;
+  }
+  return e[id] || null
+}
+
+function useStatuses (){
   const [statuses, sLoading, sErr] = useCollectionData(db.collection('statuses'), {idField: 'id'})
   const [emissionsObj, eLoading, eErr] = useEmissions()
   const errors = [sErr, eErr].filter(e => !!e)
@@ -45,36 +54,11 @@ export const useData = () => {
       return [null, loading, errors]
     }
 
-    // console.log(statuses);
-    const dates = statuses.map(s => s.id);
-    let _data = statuses; // [{emissionId: [{ emissionId: status }], id: date}]
-    _data = groupStatusesByEmission(statuses); // { emissionId: [{date: emissionStatus}] }
-
-    _data = Object.entries(_data) // [[emissionId, emission]]
-      .map(([id, data]) => ({id, data})) // [{id: emissionId, data: [emissionStatus]}]
-      .filter(({data}) => data.some(st => st.type !== 'EXTINGUISHED'))
-      .filter(({data}) => data.some(st => st.rest !== 0))
-
-      .map(emission => {
-        emission.data = emission.data.map((st) => {
-          const em = emissionsObj[st.id]
-          const bought = em.count - st.rest;
-          return ({
-            ...st,
-            x: new Date(Number(st.time)),
-            y: getPrice(bought, em, st)
-          })
-        })
-        return emission
-      })
-      .map((emission) => {
-        dates.forEach((date) => {
-
-        })
-        return emission;
-      })
-
-    return [_data, loading, errors];
+    return [
+      groupStatusesByEmission(statuses),
+      loading,
+      errors
+    ];
   }, [statuses, emissionsObj, errors, loading]);
 }
 
@@ -83,20 +67,35 @@ function getPrice(bondsCount, emission, st) {
     console.log('Unknown emission', st.id)
     return 0;
   }
-  return bondsCount * emission.computed_price
+  return bondsCount * emission.computed_price / RATE
 }
 
 function groupStatusesByEmission(statuses) {
-  return statuses
-    .reduce((acc, dayStatus) => {
-      const time = dayStatus.id;
-      delete dayStatus.id;
+  return Object
+    .entries(
+      statuses.reduce(
+        (acc, dayStatus) => {
+          const time = dayStatus.id;
+          delete dayStatus.id;
 
-      Object.values(dayStatus)
-        .forEach((emisStatus) => {
-          acc[emisStatus.id] = acc[emisStatus.id] || [];
-          acc[emisStatus.id].push({...emisStatus, time})
-        })
-      return acc
-    }, {})
+          Object
+            .values(dayStatus)
+            .forEach((emisStatus) => {
+              acc[emisStatus.id] = acc[emisStatus.id] || [];
+              acc[emisStatus.id].push({...emisStatus, time})
+            })
+          return acc
+      }, {})
+    )
+    .map(
+      ([id, data]) => ({id, data})
+    )
+}
+
+export {
+  useEmissions,
+  useEmission,
+  useStatuses,
+  getPrice,
+
 }
