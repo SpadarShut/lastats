@@ -1,5 +1,6 @@
 const LacertaAPI = require('./LacertaAPI')
 const admin = require('firebase-admin')
+const { extractIssuerLogo } = require('./extractIssuerLogo')
 
 exports.maybeAddNewEntities = async (status) => {
   const emissions = status.data();
@@ -23,17 +24,24 @@ exports.maybeAddNewEntities = async (status) => {
         const fetchEmission = LacertaAPI.fetchEmission(id)
         emissionRequests.set(id, fetchEmission)
         const emission = await fetchEmission;
-        const issuerId = LacertaAPI.getIssuerId(emission.reference_on_site);
+
+        // todo extract update method starting from here
+        const issuerId = emission.issuer_id;
         const issuerRef = storedIssuers.doc(issuerId)
         emission.issuerRef = issuerRef;
 
-        if (!savedEmission.exists) {
+        if (!savedEmission.exists || !savedEmission.data().issuer_logo) {
           console.log('Saving new emission', emission)
-          savingEmission = storedEmissions.doc(id).set(emission)
           // todo save images
+          const logo = await extractIssuerLogo(emission)
+          emission.issuer_logo = logo;
+          // todo process logo colors
+          savingEmission = storedEmissions.doc(id).set(emission)
         }
 
+        // Fetch issuer data from site
         if (!issuerRef.exists && !issuerRequests.has(issuerId)) {
+          // todo handle case when site page is not available
           const issuerDataRequest = LacertaAPI.getIssuerData(issuerId)
           issuerRequests.set(issuerId, issuerDataRequest)
           const issuerData = await issuerDataRequest

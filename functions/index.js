@@ -5,8 +5,13 @@ const fns = _functions.region('europe-west3')
 const { saveStatus } = require('./saveStatus')
 const { saveSms } = require('./saveSMS')
 const { maybeAddNewEntities } = require('./maybeAddNewEntities')
+const {extractIssuerLogo} = require('./extractIssuerLogo')
+const LacertaAPI = require('./LacertaAPI')
+var serviceAccount = require('../creds.json');
 
-admin.initializeApp();
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 exports.saveStatusHttps = fns.https
   .onRequest(async (req, res) => {
@@ -27,21 +32,11 @@ exports.addEntitiesOnNewStatus = fns.firestore
     return maybeAddNewEntities(status);
   });
 
-// exports.importData = fns.https.onRequest((req, resp) => {
-//   console.log(process.cwd());
-//
-//   return Promise.all([1].map((date) => {
-//     fs
-//       .readFile(`../public/${date}.json`, 'utf-8')
-//       .then((file) => {
-//         const data = JSON.parse(file)
-//         return saveStatus(
-//           LacertaAPI.processStatuses(data.data),
-//           String(new Date(data.time).getTime())
-//         )
-//       })
-//       .catch((e) => {
-//         console.log(e)
-//       })
-//   }))
-// })
+exports.updateIssuer = fns.https.onRequest(
+  async (req, resp) => {
+    console.log('req', req.query.id)
+    const Em = await LacertaAPI.fetchEmission(req.query.id)
+    const logo = await extractIssuerLogo(Em)
+
+    return logo
+})

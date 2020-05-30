@@ -1,7 +1,6 @@
-const fs = require('fs').promises;
-const path = require('path')
 const axios = require('axios')
 const cheerio = require('cheerio')
+var admin = require("firebase-admin")
 
 const API_URL = "https://prod.lacerta.by/api/"
 
@@ -30,21 +29,13 @@ exports.processEmissionStatus = em => ({
 })
 
 exports.getPage = async (page = 0) => {
-  let fromFiles = process.env.READ_LOCAL_DATA === '1'
   let data;
   console.log(`Fetching page ${page}`)
-
-  if (fromFiles) {
-    let json = await fs.readFile(path.resolve(`./server/data/sample-data-page${page}.json`))
-    data = JSON.parse(json)
-  }
-  else {
-    const response = await axios.get(
-      `${API_URL}v2/emissions/shorts/`,
-      {params: {page}}
-    )
-    data = response.data
-  }
+  const response = await axios.get(
+    `${API_URL}v2/emissions/shorts/`,
+    {params: {page}}
+  )
+  data = response.data
 
   return data.error
     ? Promise.reject(data.error)
@@ -55,6 +46,7 @@ exports.fetchEmission = async (id) => {
   if (!id) {
     return null
   }
+  console.log('Fetching emission', id)
   const {data} = await axios.get(`${API_URL}v2/emissions/${id}`)
   const {result, error} = data;
 
@@ -68,17 +60,13 @@ exports.fetchEmission = async (id) => {
 async function processEmission(emission) {
   const { reference_on_site } = emission;
   if (!reference_on_site) {
-    throw new Error(`No site page for emission ${emission.id}`)
+    throw new Error(`No site page field for emission ${emission.id}`)
   }
-  const issuer_id = reference_on_site.replace(/\/$/, '').split('/').pop()
-  // const issuer_logo = crypto.createHash('sha256')
-  //   .update(emission.issuer_logo)
-  //   .digest('hex');
+  const issuer_id = exports.getIssuerId(emission)
 
   return {
     ...emission,
     issuer_id,
-    issuer_logo: ''
   };
 }
 
@@ -86,10 +74,10 @@ exports.getIssuerUrl = function(id) {
   return `https://lacerta.by/${id}`
 }
 
-exports.getIssuerId = (url = '') => {
-  return url.replace(/\/$/, '').split('/').pop()
+exports.getIssuerId = (emission = {}) => {
+  const { reference_on_site = '' } = emission;
+  return reference_on_site.replace(/\/$/, '').split('/').pop()
 }
-
 
 exports.getIssuerData = async function (id) {
   const url = exports.getIssuerUrl(id)
