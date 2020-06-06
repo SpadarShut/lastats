@@ -4,6 +4,7 @@ import {useAppState} from '../app/appStateContext'
 const FiltersView = () => {
   // const [appState, setAppState] = useAppState();
   const [filters, setFilters] = useAppState('filters')
+  const [stackChart, setStackChart] = useAppState('stackChart')
 
   const addFilter = React.useCallback(() => {
     setFilters([
@@ -47,6 +48,19 @@ const FiltersView = () => {
                 {f.name}
               </label>
           ))
+      }
+      {
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={stackChart}
+              onChange={e => setStackChart(e.target.checked)}
+            />
+            Stack Chart
+          </label>
+        </div>
       }
       {
         limitDaysFilter &&

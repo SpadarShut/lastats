@@ -1,25 +1,25 @@
 import React from 'react'
 import {ResponsiveLine} from "@nivo/line"
 import ChartTooltip from "../../components/ChartTooltip"
-import * as FirestoreService from "../../services/Firebase"
 // import {useChartProps} from "./chartPropsContext"
 import {useAppState} from "../app/appStateContext"
 import {useChartData} from './useChartData'
 
 const Chart = () => {
-  const [emissions] = FirestoreService.useEmissions()
   // const [chartProps] = useChartProps()
   const [appState, setAppState] = useAppState()
   let data = useChartData()
   if (!data) {
     return null;
   }
+  const {filters, stackChart} = appState;
+  // const stacked = filters.find(f => f.name === 'stackedChart')
 
   return (
-      (data && emissions) ?
+      data ?
       <ResponsiveLine
         data={data}
-        margin={{top: 100, right: 10, left: 80, bottom: 30}}
+        margin={{top: 100, right: 100, left: 80, bottom: 30}}
         axisTop={null}
         axisRight={null}
         axisBottom={{
@@ -46,16 +46,17 @@ const Chart = () => {
         colors={({
           scheme: 'paired'
         })}
-        // yScale={{
-        //   // type: 'point', // linear | point
-        //   // min: 0,
-        //   // stacked: true,
-        // }}
+        yScale={{
+          type: 'linear', // linear | point
+          min: 'auto',
+          max: 'auto',
+          stacked: stackChart,
+        }}
         xScale={{
           type: 'time',
-          precision: 'day',
+          precision: 'minute',
         }}
-        // animate={false}
+        animate
         // offsetType="diverging"
         order="ascending"
         // enablePointLabel
@@ -88,6 +89,15 @@ const Chart = () => {
             selectedEmissionId: point.data.id,
           })
         }}
+        markers={[
+          {
+            axis: 'y',
+            value: 0,
+            lineStyle: { stroke: '#b0413e', strokeWidth: 1 },
+            // legend: 'y marker at 0',
+            // legendPosition: 'bottom-left',
+          },
+        ]}
         // keys={Object.keys(data.data[data.data.length - 1])}
         {...{
           enableGridX: false,

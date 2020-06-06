@@ -62,10 +62,13 @@ function useStatuses (){
   }, [statuses, emissionsObj, errors, loading]);
 }
 
-function getPrice(bondsCount, emission, st) {
+function getPriceInUSD(bondsCount, emission, st) {
   if (!emission) {
     console.log('Unknown emission', st.id)
     return 0;
+  }
+  if (emission.currency_type === 'USD') {
+    return bondsCount * RATE
   }
   return bondsCount * emission.computed_price / RATE
 }
@@ -96,6 +99,5 @@ export {
   useEmissions,
   useEmission,
   useStatuses,
-  getPrice,
-
+  getPriceInUSD,
 }

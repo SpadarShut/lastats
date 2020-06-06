@@ -2,6 +2,7 @@ import createContextWithUpdater from '../../utils/createContextWithUpdater'
 
 const [ AppStateContextProvider, useAppState ] = createContextWithUpdater({
   selectedEmissionId: null,
+  stackChart: false,
   filters: [
     {
       name: 'notExtinguished',
@@ -13,12 +14,20 @@ const [ AppStateContextProvider, useAppState ] = createContextWithUpdater({
     },
     {
       name: 'hideUnpopular',
-      enabled: false,
+      enabled: true,
     },
     {
       name: 'limitDays',
-      value: 7,
-    }
+      value: 5,
+    },
+    {
+      name: 'showDelta',
+      enabled: true,
+    },
+    {
+      name: 'groupByIssuer',
+      enabled: false
+    },
   ],
 })
 
