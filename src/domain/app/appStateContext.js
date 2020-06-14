@@ -18,7 +18,7 @@ const [ AppStateContextProvider, useAppState ] = createContextWithUpdater({
     },
     {
       name: 'limitDays',
-      value: 5,
+      value: 8,
     },
     {
       name: 'showDelta',

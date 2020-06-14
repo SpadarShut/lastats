@@ -13,7 +13,6 @@ export function useChartData() {
   }
 
   const {filters} = appState;
-
   let data = filters
     .reduce((result, filter) => {
       const F = FILTERS[filter.name]

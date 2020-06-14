@@ -1,6 +1,8 @@
 const FILTERS = {
   notExtinguished: {
-    fn: D => D.filter(({data}) => data.some(st => st.type !== 'EXTINGUISHED')),
+    fn: D => D.filter(
+      ({data}) => data.some(st => st.type !== 'EXTINGUISHED')
+    ),
   },
   // nowAvailable: ({data}) => data.some(st => st.rest !== 0),
   nowAvailable: {
@@ -12,9 +14,13 @@ const FILTERS = {
         (emission) => ({
           ...emission,
           data: emission.data.filter(
-            day => (
-              day.time >= new Date().getTime() - (filter.value * 24 * 60 * 60 * 1000)
-            )
+            day => {
+              const filterDays = filter.value * 24 * 60 * 60 * 1000;
+              const now = new Date().getTime()
+              return (
+                day.time >= now - filterDays
+              )
+            }
           )
         })
       )

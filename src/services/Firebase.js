@@ -78,6 +78,7 @@ function groupStatusesByEmission(statuses) {
     .entries(
       statuses.reduce(
         (acc, dayStatus) => {
+          dayStatus = {...dayStatus}
           const time = dayStatus.id;
           delete dayStatus.id;
 

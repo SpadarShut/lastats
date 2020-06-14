@@ -27,7 +27,7 @@ const ChartTooltip = ({point}) => {
       <div>{E.issuer_name} #{E.issue_number}</div>
       {
         restDelta !== undefined &&
-          <div>Рух: {deltaUSD} ({restDelta} шт.)</div>
+          <div>Рух: {deltaUSD}</div>
       }
       {
         boughtFromStartDelta !== undefined &&
