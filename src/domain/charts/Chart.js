@@ -21,7 +21,7 @@ const Chart = () => {
         data={data}
         margin={{top: 100, right: 100, left: 80, bottom: 30}}
         axisTop={null}
-        axisRight={null}
+        axisLeft={null}
         axisBottom={{
           tickValues: "every day",
           tickRotation: 0,
@@ -31,8 +31,8 @@ const Chart = () => {
           }).format(date),
           legendPosition: "start"
         }}
-        axisLeft={{
-          format: v => `$${v / 1000}k`,
+        axisRight={{
+          format: v => v < 1000 ? `$${v}` : `$${v / 1000}k`,
           legend: `Куплена на суму`,
           legendRotation: 90,
           legendOffset: -55,
@@ -101,7 +101,7 @@ const Chart = () => {
         // keys={Object.keys(data.data[data.data.length - 1])}
         {...{
           enableGridX: false,
-          enableGridY: false,
+          // enableGridY: false,
           enableCrosshair: false,
           animate: false,
         }}

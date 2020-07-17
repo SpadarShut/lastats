@@ -36,8 +36,8 @@ export function useChartData() {
       const showDeltaFilter = filters.find(f => f.name === 'showDelta')
       const processingFn = showDeltaFilter && showDeltaFilter.enabled ? yDelta : yTotal
 
-      emission.data = emission.data.map((st, i, all) => {
-        return processingFn(st, emissions[st.id], all)
+      emission.data = emission.data.map((status, i, all) => {
+        return processingFn(status, emissions[status.id], all)
       })
       return emission
     })
@@ -68,6 +68,9 @@ function yTotal(status, emission) {
 }
 
 function yDelta(status, emission, all) {
+  if (!emission) {
+    return 0
+  }
   const base = all[0];
   // total 1000, rest 9 =>
   // 1000

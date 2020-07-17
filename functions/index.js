@@ -5,7 +5,7 @@ const fns = _functions.region('europe-west3')
 const { saveStatus } = require('./saveStatus')
 const { saveSms } = require('./saveSMS')
 const { maybeAddNewEntities } = require('./maybeAddNewEntities')
-const {extractIssuerLogo} = require('./extractIssuerLogo')
+const {extractIssuerLogo} = require('./fileAPI')
 const LacertaAPI = require('./LacertaAPI')
 var serviceAccount = require('../creds.json');
 
@@ -31,6 +31,8 @@ exports.addEntitiesOnNewStatus = fns.firestore
   .onCreate((status) => {
     return maybeAddNewEntities(status);
   });
+
+exports.updateLogo
 
 exports.updateIssuer = fns.https.onRequest(
   async (req, resp) => {

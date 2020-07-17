@@ -5,6 +5,7 @@ const FiltersView = () => {
   // const [appState, setAppState] = useAppState();
   const [filters, setFilters] = useAppState('filters')
   const [stackChart, setStackChart] = useAppState('stackChart')
+  const [search, setSearch] = useAppState('searchText')
 
   const addFilter = React.useCallback(() => {
     setFilters([
@@ -22,9 +23,15 @@ const FiltersView = () => {
   }, [filters, setFilters])
 
   const limitDaysFilter = filters.find((f) => f.name === 'limitDays')
+  const searchFilter = filters.find((f) => f.name === 'search')
 
   return (
     <div>
+      <input
+        type="search"
+        value={search}
+        onChange={setSearch}
+      />
       {
         filters
           .filter((f) => f.hasOwnProperty('enabled'))

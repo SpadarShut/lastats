@@ -113,6 +113,11 @@ const FILTERS = {
   },
   stackedChart: {
 
+  },
+  search: {
+    fn: (D) => D.filter(
+      ({data}) => true
+    )
   }
 }
 export { FILTERS }

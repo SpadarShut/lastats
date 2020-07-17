@@ -1,6 +1,6 @@
 const LacertaAPI = require('./LacertaAPI')
 const admin = require('firebase-admin')
-const { extractIssuerLogo } = require('./extractIssuerLogo')
+const { getHash, getFile, saveFileToBucket, extractImageColors } = require('./fileAPI')
 
 exports.maybeAddNewEntities = async (status) => {
   const emissions = status.data();
@@ -16,7 +16,6 @@ exports.maybeAddNewEntities = async (status) => {
       .map(async (id) => {
         const storedEmissions = db.collection('emissions')
         const storedIssuers = db.collection('issuers')
-        let savingEmission, savingIssuer;
         const savedEmission = storedEmissions.doc(id)
         if (savedEmission.exists || emissionRequests.has(id)) {
           return null;
@@ -30,13 +29,34 @@ exports.maybeAddNewEntities = async (status) => {
         const issuerRef = storedIssuers.doc(issuerId)
         emission.issuerRef = issuerRef;
 
-        if (!savedEmission.exists || !savedEmission.data().issuer_logo) {
+        let savingEmission;
+        let savingIssuer;
+        let savingLogo;
+
+        if (!savedEmission.exists) {
           console.log('Saving new emission', emission)
-          // todo save images
-          const logo = await extractIssuerLogo(emission)
-          emission.issuer_logo = logo;
-          // todo process logo colors
+          if (!savedEmission.data().issuer_logo) {
+
+          }
           savingEmission = storedEmissions.doc(id).set(emission)
+        }
+        else if (!savedEmission.data().issuer_logo) {
+          const {
+            fileExists,
+            fileName,
+            file,
+            getFileData
+          } = await getLogoData(emission)
+          const colors = extractImageColors(await getFileData())
+          if (!fileExists) {
+            saveFileToBucket({
+              path: fileName,
+              data: getFileData(),
+            })
+              .catch((e) => {
+                console.log('Error saving file', fileName)
+              })
+          }
         }
 
         // Fetch issuer data from site
@@ -50,6 +70,7 @@ exports.maybeAddNewEntities = async (status) => {
             console.log('Saving new issuer', issuerId)
             issuerData.name = issuerData.name || emission.issuer_name;
             issuerData.full_issuer_name = emission.full_issuer_name;
+
             savingIssuer = issuerRef.set(issuerData)
           }
         }
@@ -60,4 +81,26 @@ exports.maybeAddNewEntities = async (status) => {
         ])
       })
   )
+}
+
+async function getLogoData(emission = {}){
+  const { issuer_id, issuer_logo } = emission;
+
+  if (!issuer_id || !issuer_logo) {
+    throw new Error('extractIssuerLogo: Invalid emission object', emission)
+  }
+
+  const hash = getHash(issuer_logo)
+  const fileName = `img/${issuer_id}-${hash}.png`
+  const file = await getFile(fileName)
+  const [fileExists] = await file.exists()
+
+  return {
+    fileName,
+    file,
+    fileExists,
+    getFileData(){
+      return new Buffer(issuer_logo, 'base64')
+    }
+  }
 }

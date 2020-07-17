@@ -5,6 +5,10 @@ const [ AppStateContextProvider, useAppState ] = createContextWithUpdater({
   stackChart: false,
   filters: [
     {
+      name: 'search',
+      value: '',
+    },
+    {
       name: 'notExtinguished',
       enabled: true,
     },
